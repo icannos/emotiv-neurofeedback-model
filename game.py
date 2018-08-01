@@ -9,7 +9,7 @@ import socket
 import argparse
 
 
-class AttentionFeedBack():
+class AttentionFeedBack:
     on = True
 
     attention_x = 0.0
