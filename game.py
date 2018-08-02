@@ -3,10 +3,9 @@ from threading import Thread
 
 import numpy as np
 
-from time import sleep
-
 import socket
 import argparse
+from keras.models import load_model
 
 
 class AttentionFeedBack:
@@ -15,7 +14,7 @@ class AttentionFeedBack:
     attention_x = 0.0
     attention_y = 0.0
 
-    window = []
+    window = [[0,0,0,0,0,0,0,0,0,1,0,0,0,0]]
 
     BUFFER_SIZE = 256
 
@@ -42,6 +41,7 @@ class AttentionFeedBack:
         self.can.pack()
         self.frame.pack()
 
+
     def run(self):
 
         self.master.title("Attention FeedBack")
@@ -56,9 +56,33 @@ class AttentionFeedBack:
     def animationLoop(self):
         self.can.delete(ALL)
         self.__draw_center_cross()
+
+        self.__draw_targets()
         self.__plot_attention()
 
-        self.master.after(500, self.animationLoop)
+
+        self.master.after(1, self.animationLoop)
+
+
+    def __draw_targets(self):
+        center = (int(self.size / 2))* self.block_size + 1, (int(self.size / 2) + 1)* self.block_size
+
+        posx = center[0]-100
+        posy = center[0] - 100
+        self.can.create_rectangle(posx, posy, posx + self.block_size, posy + self.block_size, fill="red")
+
+        posx = center[0] + 100
+        posy = center[0] - 100
+        self.can.create_rectangle(posx, posy, posx + self.block_size, posy + self.block_size, fill="red")
+
+        posx = center[0] - 100
+        posy = center[0] + 100
+        self.can.create_rectangle(posx, posy, posx + self.block_size, posy + self.block_size, fill="red")
+
+        posx = center[0] + 100
+        posy = center[0] + 100
+        self.can.create_rectangle(posx, posy, posx + self.block_size, posy + self.block_size, fill="red")
+
 
     def __draw_center_cross(self):
         center = int(self.size / 2) + 1, int(self.size / 2) + 1
@@ -77,20 +101,39 @@ class AttentionFeedBack:
         posx = int(self.attention_x * self.block_size)
         posy = int(self.attention_y * self.block_size)
 
-        self.can.create_rectangle(posx, posy, posx + self.block_size, posy + self.block_size, fill="red")
+        self.can.create_rectangle(posx, posy, posx + self.block_size, posy + self.block_size, fill="blue")
+
 
     def get_attention(self):
         '''
         test function
         :return:
         '''
+
+        self.padding = 30
+
+        self.attention_model = load_model("model-0.36.hdf5")
         while self.on:
             data = np.asarray(self.window)
-            ampl = np.fft.rfft(data,25, axis=0)
-            freqs = np.fft.rfftfreq(25, 1/128)
 
-            print(freqs)
+            ampl = np.transpose(np.abs(np.fft.rfft(data,25, axis=0)))
 
+            useful_freqs = [3,5,7]
+
+            ampl = ampl[:][:, useful_freqs]
+            ampl = np.reshape(ampl, (1, ampl.shape[0]*ampl.shape[1],))
+
+            m = np.max(ampl)
+            ampl = ampl / m
+
+            corners = np.asarray([[self.size-self.padding,self.size-self.padding], [self.size-self.padding,self.padding]
+                                     , [self.padding,self.padding], [self.padding,self.size-self.padding]])
+            p = self.attention_model.predict(ampl)
+
+            point = np.sum([corners[i] * p[0][i] for i in range(corners.shape[0])], axis=0)
+
+            self.attention_x, self.attention_y = point[0], point[1]
+            print(p)
             pass
 
         print("Terminate Attention Tracking Model")
@@ -158,7 +201,7 @@ class AttentionFeedBack:
             # We setup the buffer for next step
             buffer = n_buffer
 
-            if len(self.window) < 25:
+            if len(self.window) < 26:
                 self.window.append(fields)
             else:
                 self.window = self.window[1:] + [fields]
