@@ -1,2 +1,3 @@
-# emotiv-neurofeedback-model
-Minigame and machines learning models to test emotiv headset
+# EncePhocus 
+
+Research lib for attention tracking
