@@ -16,7 +16,7 @@ class GenericFeedback:
     FIELDS = {"COUNTER": 0, "DATA-TYPE": 1, "AF3": 4, "F7": 5, "F3": 2, "FC5": 3, "T7": 6, "P7": 7, "01": 8, "02": 9,
               "P8": 10, "T8": 11, "FC6": 14, "F4": 15, "F8": 12, "AF4": 13, "DATALINE_1": 16, "DATALINE_2": 17}
 
-    def __init__(self, size=300, block_size=5, device=None, model_path="model-0.38.hdf5"):
+    def __init__(self, size=200, block_size=5, device=None, model_path="model-0.38.hdf5"):
         self.size = size
         self.block_size = block_size
         self.device = device
@@ -91,7 +91,7 @@ class GenericFeedback:
                 sleep(0.1)
                 continue
             # Get data from the more recent to the oldest
-            data = np.asarray(reversed(self.device.data))
+            data = np.asarray(self.device.data)
 
             ampl = np.transpose(np.abs(np.fft.rfft(data, 50, axis=0)))
 
@@ -110,6 +110,8 @@ class GenericFeedback:
             p = self.attention_model.predict(ampl)
 
             point = np.sum([corners[i] * p[0][i] for i in range(corners.shape[0])], axis=0)
+
+            print(p)
 
             self.attention_x, self.attention_y = point[0], point[1]
 
@@ -248,10 +250,7 @@ class GenericTask:
         :return: None
         '''
 
-
-
         if state == 0:
-            print(self.ANSWERS)
             self.can.delete(ALL)
             self.__draw_center_cross()
 
@@ -280,7 +279,7 @@ class GenericTask:
             self.master.after(self.target_sleeptime*1000, self.animationLoop, 3)
 
         elif state == 3:
-            self.__draw_target(self.target_pos, color="#f7f6ef", distance=300)
+            self.__draw_target(self.target_pos, color="#f7f6ef", distance=400)
             self.POS_TARGET.append(self.clue_pos)
             self.DATES_TARGET.append(time()-self.begin)
 
