@@ -16,7 +16,7 @@ class GenericFeedback:
     FIELDS = {"COUNTER": 0, "DATA-TYPE": 1, "AF3": 4, "F7": 5, "F3": 2, "FC5": 3, "T7": 6, "P7": 7, "01": 8, "02": 9,
               "P8": 10, "T8": 11, "FC6": 14, "F4": 15, "F8": 12, "AF4": 13, "DATALINE_1": 16, "DATALINE_2": 17}
 
-    def __init__(self, size=200, block_size=5, device=None, model_path="model-0.38.hdf5"):
+    def __init__(self, size=250, block_size=5, device=None, model_path="model-0.38.hdf5"):
         self.size = size
         self.block_size = block_size
         self.device = device
@@ -30,6 +30,7 @@ class GenericFeedback:
         :return:
         '''
         self.master = Tk()
+        self.master.attributes('-fullscreen', True)
         self.can = Canvas(self.master, height=self.size * self.block_size, width=self.size * self.block_size,
                           bg="white")
 
