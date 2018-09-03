@@ -15,5 +15,5 @@ if __name__ == "__main__":
     attentionmodel.start()
     attention.start()
 
-    attGame.run()222
+    attGame.run()
     pass
